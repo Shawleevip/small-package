@@ -1,4 +1,8 @@
 
+* 严重感谢kenzok8建立自动更新软件仓库，本人只是借鉴。
+
+原仓库地址：https://github.com/kenzok8/small-package
+
 *  常用OpenWrt软件包源码合集，同步上游更新！
 
 *  感谢以上github仓库所有者！
