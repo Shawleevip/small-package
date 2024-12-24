@@ -54,7 +54,7 @@ jobs:
 
     - name: Upload
       env: 
-        ACCESS_TOKEN: ${{ secrets.SEARIY_TOKEN }}
+        ACCESS_TOKEN: ${{ secrets.REPO_TOKEN }}
       run: |
         if [ -e $GITHUB_WORKSPACE/LICENSE ]; then
           cp $GITHUB_WORKSPACE/LICENSE $GITHUB_WORKSPACE/${{matrix.target}}
