@@ -66,26 +66,26 @@ return view.extend({
 		so = ss.taboption('field_general', form.Value, 'port', _('Port'));
 		so.datatype = 'port';
 		so.rmempty = false;
-		so.depends({type: 'direct', '!reverse': true});
+		so.depends({type: /^(direct|mieru)$/, '!reverse': true});
 
 		/* HTTP / SOCKS fields */
 		/* hm.validateAuth */
 		so = ss.taboption('field_general', form.Value, 'username', _('Username'));
 		so.validate = L.bind(hm.validateAuthUsername, so);
-		so.depends({type: /^(http|socks5|ssh)$/});
+		so.depends({type: /^(http|socks5|mieru|ssh)$/});
 		so.modalonly = true;
 
 		so = ss.taboption('field_general', form.Value, 'password', _('Password'));
 		so.password = true;
 		so.validate = L.bind(hm.validateAuthPassword, so);
-		so.depends({type: /^(http|socks5|trojan|hysteria2|tuic|ssh)$/});
+		so.depends({type: /^(http|socks5|mieru|trojan|hysteria2|tuic|ssh)$/});
 		so.modalonly = true;
 
 		so = ss.taboption('field_general', form.TextValue, 'headers', _('HTTP header'));
 		so.renderWidget = function(/* ... */) {
 			var frameEl = form.TextValue.prototype.renderWidget.apply(this, arguments);
 
-			frameEl.firstChild.style.fontFamily = hm.monospacefonts.join(',');
+			frameEl.querySelector('textarea').style.fontFamily = hm.monospacefonts.join(',');
 
 			return frameEl;
 		}
@@ -162,6 +162,27 @@ return view.extend({
 			return hm.validateShadowsocksPassword.call(this, hm, encmode, section_id, value);
 		}
 		so.depends({type: 'ss', shadowsocks_chipher: /.+/});
+		so.modalonly = true;
+
+		/* Mieru fields */
+		so = ss.taboption('field_general', form.Value, 'mieru_port_range', _('Port range'));
+		so.datatype = 'portrange';
+		so.depends('type', 'mieru');
+		so.modalonly = true;
+
+		so = ss.taboption('field_general', form.ListValue, 'mieru_transport', _('Transport'));
+		so.value('TCP');
+		so.default = 'TCP';
+		so.depends('type', 'mieru');
+		so.modalonly = true;
+
+		so = ss.taboption('field_general', form.ListValue, 'mieru_multiplexing', _('Multiplexing'));
+		so.value('MULTIPLEXING_OFF');
+		so.value('MULTIPLEXING_LOW');
+		so.value('MULTIPLEXING_MIDDLE');
+		so.value('MULTIPLEXING_HIGH');
+		so.default = 'MULTIPLEXING_LOW';
+		so.depends('type', 'mieru');
 		so.modalonly = true;
 
 		/* Snell fields */
@@ -629,7 +650,7 @@ return view.extend({
 		so.renderWidget = function(/* ... */) {
 			var frameEl = form.TextValue.prototype.renderWidget.apply(this, arguments);
 
-			frameEl.firstChild.style.fontFamily = hm.monospacefonts.join(',');
+			frameEl.querySelector('textarea').style.fontFamily = hm.monospacefonts.join(',');
 
 			return frameEl;
 		}
@@ -839,7 +860,7 @@ return view.extend({
 		so.renderWidget = function(/* ... */) {
 			var frameEl = form.TextValue.prototype.renderWidget.apply(this, arguments);
 
-			frameEl.firstChild.style.fontFamily = hm.monospacefonts.join(',');
+			frameEl.querySelector('textarea').style.fontFamily = hm.monospacefonts.join(',');
 
 			return frameEl;
 		}
@@ -859,6 +880,12 @@ return view.extend({
 		so.rmempty = false;
 		so.depends('type', 'http');
 		so.modalonly = true;
+
+		so = ss.taboption('field_general', form.Value, 'size_limit', _('Size limit'),
+			_('In bytes. <code>%s</code> will be used if empty.').format('0'));
+		so.placeholder = '0';
+		so.validate = L.bind(hm.validateBytesize, so);
+		so.depends('type', 'http');
 
 		so = ss.taboption('field_general', form.Value, 'interval', _('Update interval'),
 			_('In seconds. <code>%s</code> will be used if empty.').format('86400'));
@@ -882,7 +909,7 @@ return view.extend({
 		so.renderWidget = function(/* ... */) {
 			var frameEl = form.TextValue.prototype.renderWidget.apply(this, arguments);
 
-			frameEl.firstChild.style.fontFamily = hm.monospacefonts.join(',');
+			frameEl.querySelector('textarea').style.fontFamily = hm.monospacefonts.join(',');
 
 			return frameEl;
 		}

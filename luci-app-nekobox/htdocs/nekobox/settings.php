@@ -50,19 +50,29 @@ function getSingboxVersion() {
 }
 
 function getMihomoVersion() {
-    $versionFile = '/etc/neko/core/mihomo_version.txt';
+    $mihomoPath = '/usr/bin/mihomo';
+    $command = "$mihomoPath -v 2>&1";  
+    exec($command, $output, $returnVar);
 
-    if (file_exists($versionFile)) {
-        $content = trim(file_get_contents($versionFile));
-
-        if (strpos($content, 'alpha') !== false) {
-            return ['version' => $content, 'type' => '预览版'];
+    if ($returnVar === 0) {
+        foreach ($output as $line) {
+            if (strpos($line, 'Mihomo') !== false) {
+                preg_match('/alpha-[a-z0-9]+/', $line, $matches);
+                if (!empty($matches)) {
+                    $version = $matches[0];  
+                    return ['version' => $version, 'type' => '预览版'];
+                }
+                
+                preg_match('/([0-9]+(\.[0-9]+)+)/', $line, $matches);
+                if (!empty($matches)) {
+                    $version = $matches[0];  
+                    return ['version' => $version, 'type' => '正式版'];
+                }
+            }
         }
-
-        return ['version' => $content, 'type' => '正式版'];
-    } else {
-        return ['version' => '未安装', 'type' => '未知'];
     }
+
+    return ['version' => '未安装', 'type' => '未知']; 
 }
 
 function getUiVersion() {
@@ -104,6 +114,28 @@ function getRazordVersion() {
         return "未安装";
     }
 }
+
+function getCliverVersion() {
+    $versionFile = '/etc/neko/tmp/nekobox_version';
+    
+    if (file_exists($versionFile)) {
+        $version = trim(file_get_contents($versionFile));
+        
+        if (preg_match('/-cn$|en$/', $version)) {
+            return ['version' => $version, 'type' => '正式版'];
+        } elseif (preg_match('/-preview$|beta$/', $version)) {
+            return ['version' => $version, 'type' => '预览版'];
+        } else {
+            return ['version' => $version, 'type' => '未知'];
+        }
+    } else {
+        return ['version' => '未安装', 'type' => '未知'];
+    }
+}
+
+$cliverData = getCliverVersion();
+$cliverVersion = $cliverData['version']; 
+$cliverType = $cliverData['type']; 
 $singBoxVersionInfo = getSingboxVersion();
 $singBoxVersion = $singBoxVersionInfo['version'];
 $singBoxType = $singBoxVersionInfo['type'];
@@ -124,7 +156,7 @@ $razordVersion = getRazordVersion();
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Settings - Neko</title>
+    <title>Settings - Nekobox</title>
     <link rel="icon" href="./assets/img/nekobox.png">
     <link href="./assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="./assets/theme/<?php echo $neko_theme ?>" rel="stylesheet">
@@ -136,35 +168,37 @@ $razordVersion = getRazordVersion();
     <script type="text/javascript" src="./assets/js/neko.js"></script>
     <?php include './ping.php'; ?>
   </head>
+<style>
+    .form-select {
+        margin-left: 10px;
+        margin-right: 16px;
+    }
+</style>
   <body>
     <div class="container-sm container-bg text-center callout border border-3 rounded-4 col-11">
         <div class="row">
-            <a href="./" class="col btn btn-lg">🏠 首页</a>
+            <a href="./index.php" class="col btn btn-lg">🏠 首页</a>
             <a href="./dashboard.php" class="col btn btn-lg">📊 面板</a>
             <a href="./configs.php" class="col btn btn-lg">⚙️ 配置</a>
             <a href="./singbox.php" class="col btn btn-lg"></i>📦 订阅</a> 
-            <a href="#" class="col btn btn-lg">🛠️ 设定</a>
-         <div class="container px-4">
-    <h2 class="text-center p-2 mb-3">主题设定</h2>
+            <a href="./settings.php" class="col btn btn-lg">🛠️ 设定</a>
+<div class="container px-4">
+    <h2 class="text-center p-2 mb-4">主题设定</h2>
     <form action="settings.php" method="post">
-        <div class="text-center justify-content-md-center">
-            <div class="row justify-content-md-center">
-                <div class="col mb-3 justify-content-md-center">
-                    <select class="form-select" name="themechange" aria-label="themex">
-                        <option selected>Change Theme (<?php echo $neko_theme ?>)</option>
-                        <?php foreach ($arrFiles as $file) echo "<option value=\"".$file.'">'.$file."</option>" ?>
-                    </select>
-                </div>
-                <div class="row justify-content-md-center">
-                    <div class="col justify-content-md-center mb-3">
-                        <input class="btn btn-info" type="submit" value="🖫 更改主题">
-                    </div>
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-6 mb-3">
+                <select class="form-select" name="themechange" aria-label="themex">
+                    <option selected>Change Theme (<?php echo $neko_theme ?>)</option>
+                    <?php foreach ($arrFiles as $file) echo "<option value=\"".$file.'">'.$file."</option>" ?>
+                </select>
+            </div>
+            <div class="col-12 col-md-6 mb-3" style="padding-right: 1.3rem;" >
+                <div class="d-grid">
+                    <input class="btn btn-info" type="submit" value="🖫 更改主题">
                 </div>
             </div>
         </div>
-    </form>   
-    <div class="card mb-4">
-    <div class="card-body"> 
+    </form>
     <table class="table table-borderless mb-3">
         <tbody>
             <tr>
@@ -172,92 +206,169 @@ $razordVersion = getRazordVersion();
                     <h2 class="text-center mb-3">自动重载防火墙</h2>
                     <form action="settings.php" method="post">
                         <div class="btn-group d-flex justify-content-center">
-                            <button type="submit" name="fw" value="enable" class="btn btn<?php if($fwstatus==1) echo "-outline" ?>-success <?php if($fwstatus==1) echo "disabled" ?>">启用</button>
+                            <button type="submit" name="fw" value="enable" class="btn btn<?php if($fwstatus==1) echo "-outline" ?>-success <?php if($fwstatus==1) echo "disabled" ?>" style="margin-right: 20px;">启用</button>
                             <button type="submit" name="fw" value="disable" class="btn btn<?php if($fwstatus==0) echo "-outline" ?>-danger <?php if($fwstatus==0) echo "disabled" ?>">停用</button>
+                         </div>
+                     </form>
+                 </td>
+             </tr>
+         <tr>
+     <tr>
+    <td>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>客户端版本</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-center" style="font-family: monospace;">
+                        <span id="cliver"></span><span id="NewCliver"> </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-center">
+                        <button class="btn btn-pink" id="checkCliverButton">🔍 检测版本</button>
+                        <button class="btn btn-info" id="updateButton" title="更新到最新版本" onclick="showVersionTypeModal()">🔄 更新版本</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </td>
+    <td>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>UI 控制面板</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-center">
+                        <?php echo htmlspecialchars($uiVersion); ?><span id="NewUi"> </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-center">
+                        <button class="btn btn-pink" id="checkUiButton">🔍 检测版本</button>
+                        <button class="btn btn-info" id="updateUiButton" title="更新面板" onclick="showPanelSelector()">🔄 更新版本</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </td>
+</tr>
+<tr>
+    <td>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Sing-box 核心版本</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-center">
+                        <div id="singBoxCorever">
+                            <?php echo htmlspecialchars($singBoxVersion); ?><span id="NewSingbox"></span>
                         </div>
-                    </form>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <div class="row g-4">
-                        <div class="col-md-6 mb-3">
-                            <div class="text-center">
-                                <h3>客户端版本</h3>
-                                <div class="form-control text-center" style="font-family: monospace; text-align: center;">
-                                    <span id="cliver"></span><span id="NewCliver"> </span>
-                                </div>
-                                <div class="text-center mt-2">
-                                    <button class="btn btn-pink" id="checkCliverButton">🔍 检测版本</button>
-                                    <button class="btn btn-info" id="updateButton" title="更新到最新版本" onclick="showUpdateVersionModal()">🔄 更新版本</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <div class="text-center">
-                                <h3>Ui 控制面板</h3>
-                                <div class="form-control text-center">
-                                    <?php echo htmlspecialchars($uiVersion); ?><span id="NewUi"> </span>
-                                </div>
-                                <div class="text-center mt-2">
-                                    <button class="btn btn-pink" id="checkUiButton">🔍 检测版本</button> 
-                                    <button class="btn btn-info" id="updateUiButton" title="更新面板" onclick="showPanelSelector()">🔄 更新版本</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <div class="text-center">
-                                <h3>Sing-box 核心版本</h3>
-                                <div class="form-control text-center">
-                                    <div id="singBoxCorever">
-                                        <?php echo htmlspecialchars($singBoxVersion); ?><span id="NewSingbox"></span>
-                                    </div>
-                                </div>
-                                <div class="text-center mt-2">
-                                    <button class="btn btn-pink" id="checkSingboxButton">🔍 检测版本</button>
-                                    <button class="btn btn-info" id="singboxOptionsButton" title="Singbox 相关操作">🔄 更新版本</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <div class="text-center">
-                                <h3>Mihomo 核心版本</h3>
-                                <div class="form-control text-center">
-                                    <span id="corever"></span><span id="NewMihomo"> </span>
-                                </div>
-                                <div class="text-center mt-2">
-                                    <button class="btn btn-pink" id="checkMihomoButton">🔍 检测版本</button> 
-                                    <button class="btn btn-info" id="updateCoreButton" title="更新 Mihomo 内核" onclick="showMihomoVersionSelector()">🔄 更新版本</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-
-<div class="modal fade" id="updateVersionModal" tabindex="-1" aria-labelledby="updateVersionModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-center">
+                        <button class="btn btn-pink" id="checkSingboxButton">🔍 检测版本</button>
+                        <button class="btn btn-info" id="singboxOptionsButton" title="Singbox 相关操作">🔄 更新版本</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </td>
+    <td>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Mihomo 核心版本</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-center">
+                        <span id="corever"></span><span id="NewMihomo"> </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-center">
+                        <button class="btn btn-pink" id="checkMihomoButton">🔍 检测版本</button>
+                        <button class="btn btn-info" id="updateCoreButton" title="更新 Mihomo 内核" onclick="showMihomoVersionSelector()">🔄 更新版本</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </td>
+</tr>
+</tbody>
+</table>
+<div class="modal fade" id="updateVersionTypeModal" tabindex="-1" aria-labelledby="updateVersionTypeModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="updateVersionModalLabel">选择更新版本语言</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <h5 class="modal-title" id="updateVersionTypeModalLabel">选择更新版本类型</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group text-center">
+                    <button id="stableBtn" class="btn btn-success btn-lg" style="margin: 10px;" onclick="selectVersionType('stable')">正式版</button>
+                    <button id="previewBtn" class="btn btn-warning btn-lg" style="margin: 10px;" onclick="selectVersionType('preview')">预览版</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="updateLanguageModal" tabindex="-1" aria-labelledby="updateLanguageModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updateLanguageModalLabel">选择语言</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
                     <label for="languageSelect">选择语言</label>
                     <select id="languageSelect" class="form-select">
                         <option value="cn">中文版</option>
-                        <option value="en">英文版</option>
+                        <option value="en">英文版</option> 
                     </select>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                <button type="button" class="btn btn-primary" onclick="confirmUpdateVersion()">确认</button>
+                <button type="button" class="btn btn-primary" onclick="confirmLanguageSelection()">确认</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="previewLanguageModal" tabindex="-1" aria-labelledby="previewLanguageModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewLanguageModalLabel">选择预览版语言</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="previewLanguageSelect">选择语言</label>
+                    <select id="previewLanguageSelect" class="form-select">
+                        <option value="cn">中文预览版</option>
+                        <option value="en">英文预览版</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="confirmPreviewLanguageSelection()">确认</button>
             </div>
         </div>
     </div>
@@ -274,7 +385,7 @@ $razordVersion = getRazordVersion();
             </div>
             <div class="modal-body">
                 <select id="mihomoVersionSelect" class="form-select">
-                    <option value="stable">稳定版</option>
+                    <option value="stable">正式版</option>
                     <option value="preview">预览版</option>
                 </select>
             </div>
@@ -296,12 +407,16 @@ $razordVersion = getRazordVersion();
                 </button>
             </div>
             <div class="modal-body">
+                <p class="text-warning">
+                    <strong>说明：</strong> 请优先选择通道一编译版本进行更新，以确保兼容性。系统会先检测并动态生成最新版本号供选择下载。 如果通道一更新不可用，可以尝试通道二版本。
+                </p>
                 <div class="d-grid gap-2">
                     <button class="btn btn-info" onclick="showSingboxVersionSelector()">更新 Singbox 内核（通道一）</button>
                     <button class="btn btn-success" onclick="showSingboxVersionSelectorForChannelTwo()">更新 Singbox 内核（通道二）</button>
                     <button class="btn btn-success" onclick="selectOperation('puernya')">切换 Puernya 内核</button>
-                    <button class="btn btn-primary" onclick="selectOperation('rule')">更新 Singbox 规则集</button>
-                    <button class="btn btn-primary" onclick="selectOperation('config')">更新 Mihomo 配置文件</button>
+                    <button class="btn btn-primary" onclick="selectOperation('rule')">更新 P核 规则集</button>
+                    <button class="btn btn-primary" onclick="selectOperation('config')">更新配置文件（备用）</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
                 </div>
             </div>
         </div>
@@ -312,18 +427,26 @@ $razordVersion = getRazordVersion();
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="versionSelectionModalLabel">选择 Singbox 内核版本 （通道一）</h5>
+                <h5 class="modal-title" id="versionSelectionModalLabel">选择 Singbox 内核版本 （编译通道一）</h5>
                 <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <select id="singboxVersionSelect" class="form-select">
-                    <option value="v1.11.0-alpha.10">v1.11.0-alpha.10</option>
-                    <option value="v1.11.0-alpha.15">v1.11.0-alpha.15</option>
-                    <option value="v1.11.0-alpha.20">v1.11.0-alpha.20</option>
-                    <option value="v1.11.0-beta.5">v1.11.0-beta.5</option>
-                </select>
+                <div class="mb-3">
+                    <select id="singboxVersionSelect" class="form-select w-100" style="transform: translateX(-10px);"> 
+                        <option value="v1.11.0-alpha.10">v1.11.0-alpha.10</option>
+                        <option value="v1.11.0-alpha.15">v1.11.0-alpha.15</option>
+                        <option value="v1.11.0-alpha.20">v1.11.0-alpha.20</option>
+                        <option value="v1.11.0-beta.5">v1.11.0-beta.5</option>
+                        <option value="v1.11.0-beta.10">v1.11.0-beta.10</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="manualVersionInput" class="form-label">输入自定义版本</label> 
+                    <input type="text" id="manualVersionInput" class="form-control w-100" value="例如：v1.11.0-beta.12">
+                </div>
+                <button type="button" class="btn btn-secondary mt-2" onclick="addManualVersion()">添加版本</button>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
@@ -337,7 +460,7 @@ $razordVersion = getRazordVersion();
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="singboxVersionModalLabel">选择 Singbox 核心版本（通道二）</h5>
+                <h5 class="modal-title" id="singboxVersionModalLabel">选择 Singbox 核心版本（官方通道二）</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -345,7 +468,7 @@ $razordVersion = getRazordVersion();
                     <label for="singboxVersionSelectForChannelTwo">选择版本</label>
                     <select id="singboxVersionSelectForChannelTwo" class="form-control">
                         <option value="preview" selected>预览版</option>  
-                        <option value="stable">稳定版</option>
+                        <option value="stable">正式版</option>
                     </select>
                 </div>
             </div>
@@ -472,6 +595,7 @@ let selectedMihomoVersion = 'stable';
 let selectedLanguage = 'cn';  
 let selectedSingboxVersionForChannelTwo = 'preview'; 
 let selectedPanel = 'zashboard';
+let selectedVersionType = 'stable';
 
 function showPanelSelector() {
     $('#panelSelectionModal').modal('show');
@@ -483,14 +607,57 @@ function confirmPanelSelection() {
     selectOperation('panel');
 }
 
-function showUpdateVersionModal() {
-    $('#updateVersionModal').modal('show');  
+function showVersionTypeModal() {
+    $('#updateVersionTypeModal').modal('show');  
 }
 
-function confirmUpdateVersion() {
-    selectedLanguage = document.getElementById('languageSelect').value;  
-    $('#updateVersionModal').modal('hide');  
-    selectOperation('client'); 
+function confirmVersionTypeSelection() {
+    selectedVersionType = document.getElementById('versionTypeSelect').value;  
+    $('#updateVersionTypeModal').modal('hide');  
+
+    if (selectedVersionType === 'stable') {
+        $('#updateLanguageModal').modal('show');  
+    } else {
+        selectOperation('client');
+    }
+}
+
+function selectVersionType(type) {
+    selectedVersionType = type; 
+    
+    if (type === 'stable') {
+        document.getElementById('stableBtn').classList.add('btn-success');
+        document.getElementById('previewBtn').classList.remove('btn-warning');
+        document.getElementById('previewBtn').classList.add('btn-light');
+    } else {
+        document.getElementById('previewBtn').classList.add('btn-warning');
+        document.getElementById('stableBtn').classList.remove('btn-success');
+        document.getElementById('stableBtn').classList.add('btn-light');
+    }
+
+    handleVersionSelection();
+}
+
+function handleVersionSelection() {
+    $('#updateVersionTypeModal').modal('hide');  
+
+    if (selectedVersionType === 'stable') {
+        $('#updateLanguageModal').modal('show');  
+    } else {
+        $('#previewLanguageModal').modal('show');  
+    }
+}
+
+function confirmLanguageSelection() {
+    selectedLanguage = document.getElementById('languageSelect').value; 
+    $('#updateLanguageModal').modal('hide');  
+    selectOperation('client');  
+}
+
+function confirmPreviewLanguageSelection() {
+    selectedLanguage = document.getElementById('previewLanguageSelect').value; 
+    $('#previewLanguageModal').modal('hide');  
+    selectOperation('client');  
 }
 
 function showSingboxVersionSelector() {
@@ -517,6 +684,51 @@ function confirmMihomoVersion() {
     selectedMihomoVersion = document.getElementById('mihomoVersionSelect').value;
     $('#mihomoVersionSelectionModal').modal('hide');  
     selectOperation('mihomo');
+}
+
+function addManualVersion() {
+    var manualVersion = document.getElementById('manualVersionInput').value;
+
+    if (manualVersion.trim() === "") {
+        alert("请输入版本号！");
+        return;
+    }
+
+    var select = document.getElementById('singboxVersionSelect');
+
+    var versionExists = Array.from(select.options).some(function(option) {
+        return option.value === manualVersion;
+    });
+
+    if (versionExists) {
+        alert("该版本已存在！");
+        return;
+    }
+
+    var newOption = document.createElement("option");
+    newOption.value = manualVersion;
+    newOption.textContent = manualVersion;
+
+    select.innerHTML = '';
+
+    select.appendChild(newOption);
+
+    var options = [
+        "v1.11.0-alpha.10", 
+        "v1.11.0-alpha.15", 
+        "v1.11.0-alpha.20", 
+        "v1.11.0-beta.5", 
+        "v1.11.0-beta.10"
+    ];
+
+    options.forEach(function(version) {
+        var option = document.createElement("option");
+        option.value = version;
+        option.textContent = version;
+        select.appendChild(option);
+    });
+
+    document.getElementById('manualVersionInput').value = '';
 }
 
 function confirmSingboxVersion() {
@@ -569,9 +781,15 @@ function selectOperation(type) {
             description: '正在更新 Mihomo 内核到最新版本 (' + selectedMihomoVersion + ')'
         },
         'client': {
-            url: 'update_script.php?lang=' + selectedLanguage,  
-            message: '开始下载客户端更新...',
-            description: '正在更新客户端到最新版本'
+            url: selectedVersionType === 'stable' 
+                ? 'update_script.php?lang=' + selectedLanguage  
+                : 'update_preview.php?lang=' + selectedLanguage,
+            message: selectedVersionType === 'stable' 
+                ? '开始下载客户端更新...' 
+                : '开始下载客户端预览版更新...',
+            description: selectedVersionType === 'stable' 
+                ? '正在更新客户端到最新正式版' 
+                : '正在更新客户端到最新预览版'
         },
         'panel': { 
             url: selectedPanel === 'zashboard' 
@@ -735,14 +953,16 @@ document.getElementById('checkSingboxButton').addEventListener('click', function
     const puernyaVersion = "<?php echo htmlspecialchars($puernyaVersion); ?>";
     const singboxPreviewVersion = "<?php echo htmlspecialchars($singboxPreviewVersion); ?>";
     const currentVersions = {
-        'Singbox 正式版': singBoxType === 'Singbox 正式版' ? singBoxVersion : '未安装',
-        'Singbox 预览版': singboxPreviewVersion,
-        'Puernya 预览版': puernyaVersion 
+        'Singbox [ 正式版 ]': singBoxType === 'Singbox 正式版' ? singBoxVersion : '未安装',
+        'Singbox [ 预览版 ]': singboxPreviewVersion,
+        'Singbox [ 编译版 ]': singboxPreviewVersion,
+        'Puernya [ 预览版 ]': puernyaVersion 
     };
     const updateFiles = [
-        { name: 'Singbox 正式版', url: 'update_singbox_stable.php' },
-        { name: 'Singbox 预览版', url: 'update_singbox_preview.php' },
-        { name: 'Puernya 预览版', url: 'puernya.php' }
+        { name: 'Singbox [ 正式版 ]', url: 'update_singbox_stable.php' },
+        { name: 'Singbox [ 预览版 ]', url: 'update_singbox_preview.php' },
+        { name: 'Singbox [ 编译版 ]', url: 'update_singbox_core.php' },
+        { name: 'Puernya [ 预览版 ]', url: 'puernya.php' }
     ];
     checkVersion('NewSingbox', updateFiles, currentVersions);
 });
@@ -751,18 +971,22 @@ document.getElementById('checkMihomoButton').addEventListener('click', function 
     const mihomoVersion = "<?php echo htmlspecialchars($mihomoVersion); ?>";
     const mihomoType = "<?php echo htmlspecialchars($mihomoType); ?>";
 
+    console.log('Mihomo Version:', mihomoVersion);  
+    console.log('Mihomo Type:', mihomoType);  
+
     const currentVersions = {
-        'Mihomo 正式版': mihomoType === '正式版' ? mihomoVersion : '未安装',
-        'Mihomo 预览版': mihomoType === '预览版' ? mihomoVersion : '未安装',
+        'Mihomo [ 正式版 ]': mihomoType === '正式版' ? mihomoVersion : '未安装',
+        'Mihomo [ 预览版 ]': mihomoType === '预览版' ? mihomoVersion : '未安装',
     };
 
     const updateFiles = [
-        { name: 'Mihomo 正式版', url: 'update_mihomo_stable.php' },
-        { name: 'Mihomo 预览版', url: 'update_mihomo_preview.php' }
+        { name: 'Mihomo [ 正式版 ]', url: 'update_mihomo_stable.php' },
+        { name: 'Mihomo [ 预览版 ]', url: 'update_mihomo_preview.php' }
     ];
 
     checkVersion('NewMihomo', updateFiles, currentVersions);
 });
+
 
 document.getElementById('checkUiButton').addEventListener('click', function () {
     const currentVersions = {
@@ -781,10 +1005,19 @@ document.getElementById('checkUiButton').addEventListener('click', function () {
 });
 
 document.getElementById('checkCliverButton').addEventListener('click', function () {
+    const cliverVersion = "<?php echo htmlspecialchars($cliverVersion); ?>";
+    const cliverType = "<?php echo htmlspecialchars($cliverType); ?>";
+
     const currentVersions = {
-        '客户端': document.getElementById('cliver').textContent,
+        '客户端 [ 正式版 ]': cliverType === '正式版' ? cliverVersion : '未安装',
+        '客户端 [ 预览版 ]': cliverType === '预览版' ? cliverVersion : '未安装',
     };
-    const updateFiles = [{ name: '客户端', url: 'update_script.php' }];
+
+    const updateFiles = [
+        { name: '客户端 [ 正式版 ]', url: 'update_script.php' },
+        { name: '客户端 [ 预览版 ]', url: 'update_preview.php' }
+    ];
+
     checkVersion('NewCliver', updateFiles, currentVersions);
 });
 
@@ -922,10 +1155,6 @@ document.getElementById('checkCliverButton').addEventListener('click', function 
             padding: 10px;
             text-decoration: none;
             color: #000000;
-        }
-        .container {
-            padding-left: 10px;
-            padding-right: 10px;
         }
     </style>
 </head>

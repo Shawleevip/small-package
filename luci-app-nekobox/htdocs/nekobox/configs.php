@@ -10,15 +10,6 @@ $selected_config = trim(file_get_contents($tmpPath));
 
 if (empty($selected_config) || !file_exists($selected_config)) {
     $selected_config = "$dirPath/default_config.yaml";
-    if (!file_exists($selected_config)) {
-        $default_config_content = "external-controller: 0.0.0.0:9090\n";
-        $default_config_content .= "secret: Akun\n";
-        $default_config_content .= "external-ui: ui\n";
-        $default_config_content .= "# 请根据需要编辑此文件\n";
-        file_put_contents($selected_config, $default_config_content);
-        $logMessage = "配置文件丢失，已创建默认配置文件。";
-    }
-
     file_put_contents($tmpPath, $selected_config);
 }
 
@@ -45,7 +36,7 @@ include './cfg.php';
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Configs - Neko</title>
+    <title>Configs - Nekobox</title>
     <link rel="icon" href="./assets/img/nekobox.png">
     <link href="./assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="./assets/css/custom.css" rel="stylesheet">
@@ -58,17 +49,17 @@ include './cfg.php';
   <body>
     <div class="container-sm container-bg text-center callout border border-3 rounded-4 col-11">
         <div class="row">
-            <a href="./" class="col btn btn-lg">🏠 首页</a>
+            <a href="./index.php" class="col btn btn-lg">🏠 首页</a>
             <a href="./dashboard.php" class="col btn btn-lg">📊 面板</a>
-            <a href="#" class="col btn btn-lg">⚙️ 配置</a>
-           <a href="./singbox.php" class="col btn btn-lg"></i>📦 订阅</a> 
+            <a href="./configs.php" class="col btn btn-lg">⚙️ 配置</a>
+            <a href="./singbox.php" class="col btn btn-lg"></i>📦 订阅</a> 
             <a href="./settings.php" class="col btn btn-lg">🛠️ 设定</a>
-    <h2 class="text-center p-2">配置</h2>
     <form action="configs.php" method="post">
-        <div class="container text-center justify-content-md-center">
+        <div class="container text-center justify-content-md-center" style="padding-left: 4ch; padding-right: 4ch;">
             <div class="row justify-content-md-center">
-                <div class="col input-group mb-3 justify-content-md-center">
-                    <select class="form-select" name="clashconfig" aria-label="themex">
+                <div class="col mb-3 justify-content-md-center">
+                    <h2 for="clashconfig" class="form-label  p-4 m-2">选择 Mihomo 配置文件</h2>
+                    <select id="clashconfig" class="form-select" name="clashconfig" aria-label="themex">
                         <option selected><?php echo basename($selected_config); ?></option>
                         <?php foreach ($arrFiles as $file) echo "<option value=\"" . basename($file) . '">' . basename($file) . "</option>"; ?>
                     </select>
@@ -82,14 +73,8 @@ include './cfg.php';
             </div>
         </div>
     </form>
-    <div class="container mt-4">
-        <?php if ($logMessage): ?>
-            <div class="alert alert-info" role="alert">
-                <?php echo htmlspecialchars($logMessage); ?>
-            </div>
-        <?php endif; ?>
-    </div>
-<div class="container   rounded-4 col-12 mb-4">
+
+<div class="container   rounded-4 col-12 mb-4" style="padding-left: 5ch; padding-right: 5ch;">
     <ul class="nav d-flex justify-content-between w-100 text-center">
         <li class="nav-item flex-grow-1">
             <a class="btn btn-lg w-100 active" data-bs-toggle="tab" href="#info">配置</a>
@@ -109,7 +94,7 @@ include './cfg.php';
     </ul>
 </div>
 
-   <div class="container rounded-4 col-12 mb-4">
+   <div class="container rounded-4 col-12 mb-4" style="padding-left: 5ch; padding-right: 5ch;">
     <div class="tab-content">
         <div id="info" class="tab-pane fade show active">
             <h2 class="text-center p-2">配置资讯</h2>
