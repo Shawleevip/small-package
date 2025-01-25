@@ -392,7 +392,7 @@ function renderPayload(s, total, uciconfig) {
 			return true;
 		}
 
-		o = s.option(form.DynamicList, prefix + 'fused', _('Factor') + ' ++',
+		o = s.option((hm.less_24_10 || !hm.pr7558_merged) ? hm.DynamicList : form.DynamicList, prefix + 'fused', _('Factor') + ' ++',
 			_('Content will not be verified, Please make sure you enter it correctly.'));
 		extenbox[n].forEach((type) => {
 			o.depends(Object.fromEntries([['type', type], [prefix + 'type', /.+/]]));
@@ -577,7 +577,7 @@ return view.extend({
 
 		s = m.section(form.TypedSection);
 		s.render = function () {
-			poll.add(function () {
+			poll.add(function() {
 				return hm.getServiceStatus('mihomo-c').then((isRunning) => {
 					hm.updateStatus(document.getElementById('_client_bar'), isRunning ? { dashboard_repo: dashboard_repo } : false, 'mihomo-c', true);
 				});
