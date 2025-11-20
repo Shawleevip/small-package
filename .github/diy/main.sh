@@ -184,14 +184,13 @@ git clone --depth 1 https://github.com/sbwml/luci-app-openlist2 oplist && mvdir 
 git clone --depth 1 https://github.com/AngelaCooljx/luci-theme-material3
 git clone --depth 1 https://github.com/vison-v/luci-app-nginx-proxy
 
-git clone --depth 1 --filter=blob:none --sparse https://github.com/stackia/rtp2httpd.git
-cd rtp2httpd
-git sparse-checkout init --cone
-git sparse-checkout set openwrt-support/rtp2httpd openwrt-support/luci-app-rtp2httpd
-mv openwrt-support/rtp2httpd ../rtp2httpd
-mv openwrt-support/luci-app-rtp2httpd ../luci-app-rtp2httpd
-cd ..
+echo "拉取 rtp2httpd 及 luci-app-rtp2httpd..."
+
+git clone --depth 1 https://github.com/stackia/rtp2httpd.git
+mv rtp2httpd/openwrt-support/rtp2httpd ./rtp2httpd
+mv rtp2httpd/openwrt-support/luci-app-rtp2httpd ./luci-app-rtp2httpd
 rm -rf rtp2httpd
+
 
 
 svn export https://github.com/coolsnowwolf/luci/trunk/libs/luci-lib-ipkg
