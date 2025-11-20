@@ -183,7 +183,6 @@ git clone --depth 1 https://github.com/EasyTier/luci-app-easytier luci-app-easyt
 git clone --depth 1 https://github.com/sbwml/luci-app-openlist2 oplist && mvdir oplist
 git clone --depth 1 https://github.com/AngelaCooljx/luci-theme-material3
 git clone --depth 1 https://github.com/vison-v/luci-app-nginx-proxy
-git clone --depth 1 https://github.com/stackia/rtp2httpd/tree/main/openwrt-support/luci-app-rtp2httpd luci-app-rtp2httpd && mvdir luci-app-rtp2httpd
 
 svn export https://github.com/coolsnowwolf/luci/trunk/libs/luci-lib-ipkg
 svn export https://github.com/x-wrt/packages/trunk/net/nft-qos
@@ -198,6 +197,8 @@ svn export https://github.com/lucikap/Brukamen/trunk/luci-app-ua2f
 svn export https://github.com/openwrt/packages/trunk/net/shadowsocks-libev
 svn export https://github.com/kenzok8/jell/trunk/vsftpd-alt
 svn export https://github.com/kenzok8/jell/trunk/luci-app-bridge
+svn export https://github.com/stackia/rtp2httpd/trunk/openwrt-support/luci-app-rtp2httpd luci-app-rtp2httpd
+svn export https://github.com/stackia/rtp2httpd/tree/main/openwrt-support/rtp2httpd rtp2httpd
 
 git_sparse_clone master "https://github.com/coolsnowwolf/packages" "leanpack" net/miniupnpd net/mwan3 \
 multimedia/gmediarender multimedia/UnblockNeteaseMusic-Go net/phtunnel net/frp net/headscale net/go-aliyundrive-webdav \
