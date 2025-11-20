@@ -183,7 +183,8 @@ git clone --depth 1 https://github.com/EasyTier/luci-app-easytier luci-app-easyt
 git clone --depth 1 https://github.com/sbwml/luci-app-openlist2 oplist && mvdir oplist
 git clone --depth 1 https://github.com/AngelaCooljx/luci-theme-material3
 git clone --depth 1 https://github.com/vison-v/luci-app-nginx-proxy
-git clone --depth 1 https://github.com/stackia/rtp2httpd/tree/main/openwrt-support/luci-app-rtp2httpd
+git clone --depth 1 https://github.com/stackia/rtp2httpd/luci-app-rtp2httpd
+git clone --depth 1 https://github.com/stackia/rtp2httpd rtp2httpd
 
 svn export https://github.com/coolsnowwolf/luci/trunk/libs/luci-lib-ipkg
 svn export https://github.com/x-wrt/packages/trunk/net/nft-qos
