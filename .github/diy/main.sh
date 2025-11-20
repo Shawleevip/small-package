@@ -44,7 +44,7 @@ git clone --depth 1 https://github.com/KyleRicardo/MentoHUST-OpenWrt-ipk
 git clone --depth 1 https://github.com/NateLol/luci-app-beardropper
 git clone --depth 1 https://github.com/yaof2/luci-app-ikoolproxy
 git clone --depth 1 https://github.com/project-lede/luci-app-godproxy
-git clone --depth 1 -b openwrt-18.06 https://github.com/tty228/luci-app-wechatpush
+git clone --depth 1 https://github.com/tty228/luci-app-wechatpush
 git clone --depth 1 https://github.com/4IceG/luci-app-sms-tool smstool && mvdir smstool
 git clone --depth 1 https://github.com/silime/luci-app-xunlei
 git clone --depth 1 https://github.com/BCYDTZ/luci-app-UUGameAcc
@@ -133,7 +133,7 @@ git clone --depth 1 https://github.com/SSSSSimon/tencentcloud-openwrt-plugin-ddn
 git clone --depth 1 https://github.com/Tencent-Cloud-Plugins/tencentcloud-openwrt-plugin-cos && mv -n tencentcloud-openwrt-plugin-cos/tencentcloud_cos ./luci-app-tencentcloud-cos; rm -rf tencentcloud-openwrt-plugin-cos
 git clone --depth 1 https://github.com/kiddin9/kwrt-packages && mv -n kwrt-packages/luci-app-bypass kwrt-packages/luci-app-fileassistant ./ ; rm -rf kwrt-packages
 git clone --depth 1 https://github.com/immortalwrt/packages && mv -n packages/net/{cdnspeedtest,dae,daed,vsftpd,transmission} ./ ; rm -rf packages
-git clone --depth 1 https://github.com/immortalwrt/luci && mv -n luci/applications/{luci-app-daed,luci-app-filebrowser,luci-app-gost,luci-app-usb-printer,luci-app-vlmcsd,luci-app-transmission} ./ ; rm -rf luci
+git clone --depth 1 https://github.com/immortalwrt/luci && mv -n luci/applications/{luci-app-argon-config,luci-app-dae,luci-app-diskman,luci-app-filebrowser-go,luci-app-daed,luci-app-filebrowser,luci-app-gost,luci-app-usb-printer,luci-app-openlist,luci-app-vlmcsd,luci-app-transmission,luci-app-snmpd} ./ ; rm -rf luci
 git clone --depth 1 https://github.com/mingxiaoyu/luci-app-cloudflarespeedtest cloudflarespeedtest && mv -n cloudflarespeedtest/applications/* ./;rm -rf cloudflarespeedtest
 git clone --depth 1 https://github.com/doushang/luci-app-shortcutmenu luci-shortcutmenu && mv -n luci-shortcutmenu/luci-app-shortcutmenu ./ ; rm -rf luci-shortcutmenu
 git clone --depth 1 https://github.com/sbilly/netmaker-openwrt && mv -n netmaker-openwrt/netmaker ./; rm -rf netmaker-openwrt
@@ -144,7 +144,7 @@ git clone --depth 1 https://github.com/vinewx/NanoHatOLED; mv NanoHatOLED/nanoha
 git clone --depth 1 https://github.com/zerolabnet/luci-app-torbp
 git clone --depth 1 https://github.com/muink/luci-app-tinyfilemanager
 git clone --depth 1 https://github.com/sbwml/luci-app-airconnect airconnect1 && mv airconnect1/* ./ && rm -rf airconnect1
-git clone --depth 1 https://github.com/sirpdboy/luci-theme-kucat -b js --depth 1
+#git clone --depth 1 https://github.com/sirpdboy/luci-theme-kucat -b js --depth 1
 git clone --depth 1 https://github.com/blueberry-pie-11/luci-app-natmap
 git clone --depth 1 https://github.com/QiuSimons/luci-app-daed-next daed1 && mvdir daed1
 #git clone --depth 1 https://github.com/morytyann/OpenWrt-mihomo OpenWrt-mihomo && mv -n OpenWrt-mihomo/*mihomo ./ ; rm -rf OpenWrt-mihomo
@@ -159,6 +159,31 @@ git clone --depth 1 https://github.com/Carseason/openwrt-app-actions Carseason &
 git clone --depth 1 https://github.com/Akimio521/luci-app-gecoosac
 git clone --depth 1 https://github.com/EasyTier/luci-app-easytier
 git clone --depth 1 https://github.com/asvow/luci-app-tailscale
+git clone --depth 1 https://github.com/kiddin9/openwrt-netdata netdata
+git clone --depth 1 https://github.com/kiddin9/openwrt-my-dnshelper && mvdir openwrt-my-dnshelper
+git clone --depth 1 https://github.com/kiddin9/openwrt-lingtigameacc && mvdir openwrt-lingtigameacc
+git clone --depth 1 https://github.com/kiddin9/luci-app-timewol
+git clone --depth 1 https://github.com/kiddin9/luci-app-vsftpd
+git clone --depth 1 https://github.com/kiddin9/openwrt-subconverter && mvdir openwrt-subconverter
+git clone --depth 1 https://github.com/kiddin9/luci-app-syncdial
+git clone --depth 1 https://github.com/sbwml/luci-app-webdav
+git clone --depth 1 https://github.com/sirpdboy/luci-app-taskplan taskplan && mvdir taskplan
+git clone --depth 1 https://github.com/sirpdboy/luci-app-watchdog watchdog1 && mvdir watchdog1
+git clone --depth 1 https://github.com/sirpdboy/luci-app-timecontrol timecontrol && mvdir timecontrol
+git clone --depth 1 https://github.com/sirpdboy/luci-theme-kucat openwrt-kucat && mv -n openwrt-kucat/luci-theme-kucat ./ ; rm -rf openwrt-kucat
+git clone --depth 1 https://github.com/muink/openwrt-fastfetch
+git clone --depth 1 https://github.com/linkease/lcdsimple lcdsimple1 && mvdir lcdsimple1
+git clone --depth 1 https://github.com/Wulnut/luci-app-suselogin
+git clone https://github.com/Ausaci/luci-app-nat6-helper -b main-dev
+git clone --depth 1 https://github.com/animegasan/luci-app-droidmodem
+git clone --depth 1 https://github.com/kenzok78/luci-app-guest-wifi
+git clone --depth 1 https://github.com/EkkoG/openwrt-natmap
+git clone --depth 1 https://github.com/EkkoG/luci-app-natmap
+git clone --depth 1 https://github.com/EasyTier/luci-app-easytier luci-app-easytier1 && mvdir luci-app-easytier1
+git clone --depth 1 https://github.com/sbwml/luci-app-openlist2 oplist && mvdir oplist
+git clone --depth 1 https://github.com/AngelaCooljx/luci-theme-material3
+git clone --depth 1 https://github.com/vison-v/luci-app-nginx-proxy
+git clone --depth 1 https://github.com/stackia/rtp2httpd/tree/main/openwrt-support/luci-app-rtp2httpd
 
 svn export https://github.com/coolsnowwolf/luci/trunk/libs/luci-lib-ipkg
 svn export https://github.com/x-wrt/packages/trunk/net/nft-qos
@@ -235,6 +260,7 @@ sed -i 's/ +uhttpd-mod-ubus//' luci-app-packet-capture/Makefile
 sed -i 's/	ip.neighbors/	luci.ip.neighbors/' luci-app-wifidog/luasrc/model/cbi/wifidog/wifidog_cfg.lua
 #sed -i -e 's/nas/services/g' -e 's/NAS/Services/g' $(grep -rl 'nas\|NAS' luci-app-fileassistant)
 #sed -i -e 's/nas/services/g' -e 's/NAS/Services/g' $(grep -rl 'nas\|NAS' luci-app-alist)
+sed -i 's/USE_QUIC=1/USE_QUIC=/g' haproxy/Makefile
 #find . -type f -name Makefile -exec sed -i 's/PKG_BUILD_FLAGS:=no-mips16/PKG_USE_MIPS16:=0/g' {} +
 sed -i '/entry({"admin", "nas"}, firstchild(), "NAS", 45).dependent = false/d; s/entry({"admin", "network", "eqos"}, cbi("eqos"), _("EQoS"))/entry({"admin", "network", "eqos"}, cbi("eqos"), _("EQoS"), 121).dependent = true/' luci-app-eqos/luasrc/controller/eqos.lua
 #sed -i '65,73d' adguardhome/Makefile
@@ -242,4 +268,3 @@ sed -i 's/PKG_SOURCE_DATE:=2/PKG_SOURCE_DATE:=3/' transmission-web-control/Makef
 find . -type f -name "update.sh" -exec rm -f {} \;
 rm -rf adguardhome/patches
 exit 0
-
