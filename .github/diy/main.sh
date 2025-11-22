@@ -184,22 +184,6 @@ git clone --depth 1 https://github.com/sbwml/luci-app-openlist2 oplist && mvdir 
 git clone --depth 1 https://github.com/AngelaCooljx/luci-theme-material3
 git clone --depth 1 https://github.com/vison-v/luci-app-nginx-proxy
 
-git clone --depth 1 --filter=blob:none --sparse https://github.com/stackia/rtp2httpd.git rtp2httpd-src
-cd rtp2httpd-src
-
-git sparse-checkout init --cone
-git sparse-checkout set openwrt-support/rtp2httpd openwrt-support/luci-app-rtp2httpd
-
-git checkout main  # 或者仓库的默认分支
-
-mv openwrt-support/rtp2httpd ../rtp2httpd
-mv openwrt-support/luci-app-rtp2httpd ../luci-app-rtp2httpd
-
-cd ..
-rm -rf rtp2httpd-src
-
-
-
 svn export https://github.com/coolsnowwolf/luci/trunk/libs/luci-lib-ipkg
 svn export https://github.com/x-wrt/packages/trunk/net/nft-qos
 svn export https://github.com/x-wrt/luci/trunk/applications/luci-app-nft-qos
