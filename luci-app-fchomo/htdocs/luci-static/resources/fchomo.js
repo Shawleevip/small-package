@@ -382,6 +382,8 @@ const CBIGridSection = form.GridSection.extend({
 		let el = form.GridSection.prototype.renderSectionAdd.call(this, extra_class),
 			nameEl = el.querySelector('.cbi-section-create-name');
 
+		nameEl.placeholder = _('Specify a ID');
+
 		ui.addValidator(nameEl, 'uciname', true, (v) => {
 			let button = el.querySelector('.cbi-section-create > .cbi-button-add');
 
@@ -645,7 +647,7 @@ const CBIHandleImport = baseclass.extend(/** @lends hm.HandleImport.prototype */
 						E('br'),
 						//type_file_count ? _("%s rule-set of type '%s' need to be filled in manually.")
 						//	.format(type_file_count, 'file') : ''
-					]));
+					]), 'info');
 			}
 
 			if (imported_count)
@@ -868,6 +870,28 @@ function generateRand(type, length) {
 		default:
 			return null;
 	};
+}
+
+function shuffle(StrORArr) {
+	let arr;
+
+	if (typeof StrORArr === 'string')
+		arr = StrORArr.split('');
+	else if (Array.isArray(StrORArr))
+		arr = StrORArr;
+	else
+		throw new Error(`String or Array only`);
+
+    for (let i = arr.length - 1; i > 0; i--) {         // Traverse the array from back to front
+        const j = Math.floor(Math.random() * (i + 1)); // Generate a random index between 0 and i
+
+        [arr[i], arr[j]] = [arr[j], arr[i]];           // Swap positions
+    }
+
+	if (typeof StrORArr === 'string')
+		return arr.join('');
+	else if (Array.isArray(StrORArr))
+		return arr;
 }
 
 function json2yaml(object, command) {
@@ -1125,12 +1149,12 @@ function renderResDownload(section_id) {
 			click: ui.createHandlerFn(this, (section_type, section_id, type, url, header) => {
 				if (type === 'http') {
 					return downloadFile(section_type, section_id, url, header).then((res) => {
-						ui.addNotification(null, E('p', _('Download successful.')));
+						ui.addNotification(null, E('p', _('Download successful.')), 'info');
 					}).catch((e) => {
-						ui.addNotification(null, E('p', _('Download failed: %s').format(e)));
+						ui.addNotification(null, E('p', _('Download failed: %s').format(e)), 'error');
 					});
 				} else
-					return ui.addNotification(null, E('p', _('Unable to download unsupported type: %s').format(type)));
+					return ui.addNotification(null, E('p', _('Unable to download unsupported type: %s').format(type)), 'error');
 			}, section_type, section_id, type, url, header)
 		}, [ _('🡇') ]) //🗘
 	]);
@@ -1159,13 +1183,15 @@ function handleGenKey(option) {
 					widget(k).value = v ?? '';
 				});
 			else
-				ui.addNotification(null, E('p', _('Failed to generate %s, error: %s.').format(type, res.error)));
+				ui.addNotification(null, E('p', _('Failed to generate %s, error: %s.').format(type, res.error)), 'error');
 		});
 	} else {
 		let password, required_method;
 
 		if (option === 'uuid' || option.match(/_uuid/))
 			required_method = 'uuid';
+		else if (option.match(/sudoku_custom_table/))
+			required_method = 'sudoku_custom_table';
 		else if (type === 'shadowsocks' && option === 'shadowsocks_password')
 			required_method = this.section.getOption('shadowsocks_chipher')?.formvalue(section_id);
 		else if (type === 'trojan' && option === 'trojan_ss_password')
@@ -1179,6 +1205,10 @@ function handleGenKey(option) {
 			/* UUID */
 			case 'uuid':
 				password = generateRand('uuid');
+				break;
+			/* SUDOKU CUSTOM TABLE */
+			case 'sudoku_custom_table':
+				password = shuffle('xxppvvvv');
 				break;
 			/* DEFAULT */
 			default:
@@ -1200,7 +1230,7 @@ function handleReload(instance, ev, section_id) {
 	return fs.exec('/etc/init.d/fchomo', ['reload', instance])
 		.then((res) => { /* return window.location = window.location.href.split('#')[0] */ })
 		.catch((e) => {
-			ui.addNotification(null, E('p', _('Failed to execute "/etc/init.d/fchomo %s %s" reason: %s').format('reload', instance, e)))
+			ui.addNotification(null, E('p', _('Failed to execute "/etc/init.d/fchomo %s %s" reason: %s').format('reload', instance, e)), 'error')
 		})
 }
 
@@ -1438,6 +1468,22 @@ function validateShadowsocksPassword(encmode, section_id, value) {
 	return true;
 }
 
+function validateSudokuCustomTable(section_id, value) {
+	if (!value)
+		return true;
+
+	if (value.length !== 8)
+		return _('Expecting: %s').format(_('valid format: 2x, 2p, 4v'));
+
+	const counts = {};
+    for (const c of value)
+        counts[c] = (counts[c] || 0) + 1;
+    if (!(counts.x === 2 && counts.p === 2 && counts.v === 4))
+		return _('Expecting: %s').format(_('valid format: 2x, 2p, 4v'));
+
+	return true;
+}
+
 function validateUniqueValue(section_id, value) {
 	if (!value)
 		return _('Expecting: %s').format(_('non-empty value'));
@@ -1547,12 +1593,12 @@ function uploadCertificate(type, filename, ev) {
 	.then(L.bind((btn, res) => {
 		return L.resolveDefault(callWriteCertificate(filename), {}).then((ret) => {
 			if (ret.result === true)
-				ui.addNotification(null, E('p', _('Your %s was successfully uploaded. Size: %sB.').format(type, res.size)));
+				ui.addNotification(null, E('p', _('Your %s was successfully uploaded. Size: %sB.').format(type, res.size)), 'info');
 			else
-				ui.addNotification(null, E('p', _('Failed to upload %s, error: %s.').format(type, ret.error)));
+				ui.addNotification(null, E('p', _('Failed to upload %s, error: %s.').format(type, ret.error)), 'error');
 		});
 	}, this, ev.target))
-	.catch((e) => { ui.addNotification(null, E('p', e.message)) });
+	.catch((e) => { ui.addNotification(null, E('p', e.message), 'error') });
 }
 function uploadInitialPack(ev, section_id) {
 	const callWriteInitialPack = rpc.declare({
@@ -1565,13 +1611,13 @@ function uploadInitialPack(ev, section_id) {
 	.then(L.bind((btn, res) => {
 		return L.resolveDefault(callWriteInitialPack(), {}).then((ret) => {
 			if (ret.result === true) {
-				ui.addNotification(null, E('p', _('Successfully uploaded.')));
+				ui.addNotification(null, E('p', _('Successfully uploaded.')), 'info');
 				return window.location = window.location.href.split('#')[0];
 			} else
-				ui.addNotification(null, E('p', _('Failed to upload, error: %s.').format(ret.error)));
+				ui.addNotification(null, E('p', _('Failed to upload, error: %s.').format(ret.error)), 'error');
 		});
 	}, this, ev.target))
-	.catch((e) => { ui.addNotification(null, E('p', e.message)) });
+	.catch((e) => { ui.addNotification(null, E('p', e.message), 'error') });
 }
 
 return baseclass.extend({
@@ -1629,6 +1675,7 @@ return baseclass.extend({
 	decodeBase64Bin,
 	encodeBase64Bin,
 	generateRand,
+	shuffle,
 	json2yaml,
 	yaml2json,
 	isEmpty,
@@ -1669,6 +1716,7 @@ return baseclass.extend({
 	validateMTLSClientAuth,
 	validatePresetIDs,
 	validateShadowsocksPassword,
+	validateSudokuCustomTable,
 	validateUniqueValue,
 	// file operations
 	lsDir,

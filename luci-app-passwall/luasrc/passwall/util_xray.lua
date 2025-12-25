@@ -74,7 +74,7 @@ function gen_outbound(flag, node, tag, proxy_table)
 				local relay_port = node.port
 				new_port = get_new_port()
 				local config_file = string.format("%s_%s_%s.json", flag, tag, new_port)
-				if tag and node_id and tag ~= node_id then
+				if tag and node_id and not tag:find(node_id) then
 					config_file = string.format("%s_%s_%s_%s.json", flag, tag, node_id, new_port)
 				end
 				if run_socks_instance then
@@ -146,6 +146,7 @@ function gen_outbound(flag, node, tag, proxy_table)
 			streamSettings = (node.streamSettings or node.protocol == "vmess" or node.protocol == "vless" or node.protocol == "socks" or node.protocol == "shadowsocks" or node.protocol == "trojan") and {
 				sockopt = {
 					mark = 255,
+					tcpFastOpen = (node.tcp_fast_open == "1") and true or nil,
 					tcpMptcp = (node.tcpMptcp == "1") and true or nil,
 					dialerProxy = (fragment or noise) and "dialerproxy" or nil
 				},
@@ -201,8 +202,8 @@ function gen_outbound(flag, node, tag, proxy_table)
 				} or nil,
 				wsSettings = (node.transport == "ws") and {
 					path = node.ws_path or "/",
-					headers = (node.ws_host or node.ws_user_agent) and {
-						Host = node.ws_host,
+					host = node.ws_host,
+					headers = node.ws_user_agent and {
 						["User-Agent"] = node.ws_user_agent
 					} or nil,
 					maxEarlyData = tonumber(node.ws_maxEarlyData) or nil,
@@ -228,14 +229,20 @@ function gen_outbound(flag, node, tag, proxy_table)
 					mode = node.xhttp_mode or "auto",
 					path = node.xhttp_path or "/",
 					host = node.xhttp_host,
-					-- 如果包含 "extra" 节，取 "extra" 内的内容，否则直接赋值给 extra
 					extra = node.xhttp_extra and (function()
 							local success, parsed = pcall(jsonc.parse, api.base64Decode(node.xhttp_extra))
-							if success then
-								return parsed.extra or parsed
-							else
-								return nil
+							if not success or not parsed then return nil end
+							-- 如果包含 "extra" 节，就使用它，否则直接使用
+							local tbl = parsed.extra or parsed
+							-- 枚举第1层字段，如果值为空表或nil就删除(简单容错)
+							for k, v in pairs(tbl) do
+								if type(v) == "table" and next(v) == nil then
+									tbl[k] = nil
+								elseif v == nil then
+									tbl[k] = nil
+								end
 							end
+							return tbl
 						end)() or nil
 				} or nil,
 			} or nil,
@@ -753,12 +760,31 @@ function gen_config(var)
 					end
 				end
 				if is_new_blc_node then
-					local blc_node = uci:get_all(appname, blc_node_id)
-					local outbound = gen_outbound(flag, blc_node, blc_node_tag, { fragment = xray_settings.fragment == "1" or nil, noise = xray_settings.noise == "1" or nil, run_socks_instance = not no_run })
-					if outbound then
-						outbound.tag = outbound.tag .. ":" .. blc_node.remarks
-						table.insert(outbounds, outbound)
-						valid_nodes[#valid_nodes + 1] = outbound.tag
+					local blc_node
+					if blc_node_id:find("Socks_") then
+						local socks_id = blc_node_id:sub(1 + #"Socks_")
+						local socks_node = uci:get_all(appname, socks_id) or nil
+						if socks_node then
+							blc_node = {
+								type = "Xray",
+								protocol = "socks",
+								address = "127.0.0.1",
+								port = socks_node.port,
+								transport = "tcp",
+								stream_security = "none",
+								remarks = "Socks_" .. socks_node.port
+							}
+						end
+					else
+						blc_node = uci:get_all(appname, blc_node_id)
+					end
+					if blc_node then
+						local outbound = gen_outbound(flag, blc_node, blc_node_tag, { fragment = xray_settings.fragment == "1" or nil, noise = xray_settings.noise == "1" or nil, run_socks_instance = not no_run })
+						if outbound then
+							outbound.tag = outbound.tag .. ":" .. blc_node.remarks
+							table.insert(outbounds, outbound)
+							valid_nodes[#valid_nodes + 1] = outbound.tag
+						end
 					end
 				end
 			end
@@ -778,17 +804,36 @@ function gen_config(var)
 					end
 				end
 				if is_new_node then
-					local fallback_node = uci:get_all(appname, fallback_node_id)
-					if fallback_node.protocol ~= "_balancing" then
-						local outbound = gen_outbound(flag, fallback_node, fallback_node_id, { fragment = xray_settings.fragment == "1" or nil, noise = xray_settings.noise == "1" or nil, run_socks_instance = not no_run })
-						if outbound then
-							outbound.tag = outbound.tag .. ":" .. fallback_node.remarks
-							table.insert(outbounds, outbound)
-							fallback_node_tag = outbound.tag
+					local fallback_node
+					if fallback_node_id:find("Socks_") then
+						local socks_id = fallback_node_id:sub(1 + #"Socks_")
+						local socks_node = uci:get_all(appname, socks_id) or nil
+						if socks_node then
+							fallback_node = {
+								type = "Xray",
+								protocol = "socks",
+								address = "127.0.0.1",
+								port = socks_node.port,
+								transport = "tcp",
+								stream_security = "none",
+								remarks = "Socks_" .. socks_node.port
+							}
 						end
 					else
-						if gen_balancer(fallback_node) then
-							fallback_node_tag = fallback_node_id
+						fallback_node = uci:get_all(appname, fallback_node_id)
+					end
+					if fallback_node then
+						if fallback_node.protocol ~= "_balancing" then
+							local outbound = gen_outbound(flag, fallback_node, fallback_node_id, { fragment = xray_settings.fragment == "1" or nil, noise = xray_settings.noise == "1" or nil, run_socks_instance = not no_run })
+							if outbound then
+								outbound.tag = outbound.tag .. ":" .. fallback_node.remarks
+								table.insert(outbounds, outbound)
+								fallback_node_tag = outbound.tag
+							end
+						else
+							if gen_balancer(fallback_node) then
+								fallback_node_tag = fallback_node_id
+							end
 						end
 					end
 				end
@@ -1531,7 +1576,11 @@ function gen_config(var)
 		end
 
 		for index, value in ipairs(config.outbounds) do
-			if not value["_flag_proxy_tag"] and value["_id"] and value.server and value.server_port and not no_run then
+			local s = value.settings
+			if not value["_flag_proxy_tag"] and value["_id"] and s and not no_run and
+			((s.vnext and s.vnext[1] and s.vnext[1].address and s.vnext[1].port) or 
+			(s.servers and s.servers[1] and s.servers[1].address and s.servers[1].port) or
+			(s.peers and s.peers[1] and s.peers[1].endpoint)) then
 				sys.call(string.format("echo '%s' >> %s", value["_id"], api.TMP_PATH .. "/direct_node_list"))
 			end
 			for k, v in pairs(config.outbounds[index]) do

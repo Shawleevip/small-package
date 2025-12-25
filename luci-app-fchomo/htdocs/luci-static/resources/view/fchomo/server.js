@@ -358,6 +358,14 @@ return view.extend({
 		hm.sudoku_cipher_methods.forEach((res) => {
 			o.value.apply(o, res);
 		})
+		o.validate = function(section_id, value) {
+			const pure_downlink = this.section.getUIElement(section_id, 'sudoku_enable_pure_downlink')?.node.querySelector('input').checked;
+
+			if (value === 'none' && pure_downlink === false)
+				return _('Expecting: %s').format(_('Chipher must be enabled if obfuscate downlink is disabled.'));
+
+			return true;
+		}
 		o.depends('type', 'sudoku');
 		o.modalonly = true;
 
@@ -365,6 +373,22 @@ return view.extend({
 		o.value('prefer_ascii', _('Obfuscated as ASCII data stream'));
 		o.value('prefer_entropy', _('Obfuscated as low-entropy data stream'));
 		o.depends('type', 'sudoku');
+		o.modalonly = true;
+
+		o = s.taboption('field_general', form.DynamicList, 'sudoku_custom_tables', _('Custom byte layout'));
+		o.renderWidget = function(/* ... */) {
+			let node = form.DynamicList.prototype.renderWidget.apply(this, arguments);
+
+			(node.querySelector('.control-group') || node).appendChild(E('button', {
+				class: 'cbi-button cbi-button-positive',
+				title: _('Generate'),
+				click: ui.createHandlerFn(this, hm.handleGenKey, this.hm_options || this.option)
+			}, [ _('Generate') ]));
+
+			return node;
+		}
+		o.validate = hm.validateSudokuCustomTable;
+		o.depends('sudoku_table_type', 'prefer_entropy');
 		o.modalonly = true;
 
 		o = s.taboption('field_general', form.Value, 'sudoku_padding_min', _('Minimum padding'));
@@ -385,6 +409,27 @@ return view.extend({
 		o.datatype = 'uinteger';
 		o.placeholder = 5;
 		o.depends('type', 'sudoku');
+		o.modalonly = true;
+
+		o = s.taboption('field_general', form.Flag, 'sudoku_enable_pure_downlink', _('Enable obfuscate for downlink'),
+			_('When disabled, downlink ciphertext is split into 6-bit segments, reusing the original padding pool and obfuscate type to reduce downlink overhead.') + '</br>' +
+			_('Uplink keeps the Sudoku protocol, and downlink characteristics are consistent with uplink characteristics.'));
+		o.default = o.enabled;
+		o.depends('type', 'sudoku');
+		o.modalonly = true;
+
+		o = s.taboption('field_general', form.Flag, 'sudoku_http_mask', _('HTTP mask'));
+		o.default = o.enabled;
+		o.depends('type', 'sudoku');
+		o.modalonly = true;
+
+		o = s.taboption('field_general', form.ListValue, 'sudoku_http_mask_mode', _('HTTP mask mode'));
+		o.default = 'legacy';
+		o.value('legacy', _('Legacy'));
+		o.value('stream', _('stream') + ' - ' + _('CDN support'));
+		o.value('poll', _('poll') + ' - ' + _('CDN support'));
+		o.value('auto', _('Auto') + ' - ' + _('CDN support'));
+		o.depends('sudoku_http_mask', '1');
 		o.modalonly = true;
 
 		/* Tuic fields */

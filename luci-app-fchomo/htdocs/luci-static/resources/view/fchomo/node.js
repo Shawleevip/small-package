@@ -381,6 +381,14 @@ return view.extend({
 		hm.sudoku_cipher_methods.forEach((res) => {
 			so.value.apply(so, res);
 		})
+		so.validate = function(section_id, value) {
+			const pure_downlink = this.section.getUIElement(section_id, 'sudoku_enable_pure_downlink')?.node.querySelector('input').checked;
+
+			if (value === 'none' && pure_downlink === false)
+				return _('Expecting: %s').format(_('Chipher must be enabled if obfuscate downlink is disabled.'));
+
+			return true;
+		}
 		so.depends('type', 'sudoku');
 		so.modalonly = true;
 
@@ -388,6 +396,11 @@ return view.extend({
 		so.value('prefer_ascii', _('Obfuscated as ASCII data stream'));
 		so.value('prefer_entropy', _('Obfuscated as low-entropy data stream'));
 		so.depends('type', 'sudoku');
+		so.modalonly = true;
+
+		so = ss.taboption('field_general', form.DynamicList, 'sudoku_custom_tables', _('Custom byte layout'));
+		so.validate = hm.validateSudokuCustomTable;
+		so.depends('sudoku_table_type', 'prefer_entropy');
 		so.modalonly = true;
 
 		so = ss.taboption('field_general', form.Value, 'sudoku_padding_min', _('Minimum padding'));
@@ -404,9 +417,43 @@ return view.extend({
 		so.depends('type', 'sudoku');
 		so.modalonly = true;
 
+		so = ss.taboption('field_general', form.Flag, 'sudoku_enable_pure_downlink', _('Enable obfuscate for downlink'),
+			_('When disabled, downlink ciphertext is split into 6-bit segments, reusing the original padding pool and obfuscate type to reduce downlink overhead.') + '</br>' +
+			_('Uplink keeps the Sudoku protocol, and downlink characteristics are consistent with uplink characteristics.'));
+		so.default = so.enabled;
+		so.depends('type', 'sudoku');
+		so.modalonly = true;
+
 		so = ss.taboption('field_general', form.Flag, 'sudoku_http_mask', _('HTTP mask'));
 		so.default = so.enabled;
 		so.depends('type', 'sudoku');
+		so.modalonly = true;
+
+		so = ss.taboption('field_general', form.ListValue, 'sudoku_http_mask_mode', _('HTTP mask mode'));
+		so.default = 'legacy';
+		so.value('legacy', _('Legacy'));
+		so.value('stream', _('stream') + ' - ' + _('CDN support'));
+		so.value('poll', _('poll') + ' - ' + _('CDN support'));
+		so.value('auto', _('Auto') + ' - ' + _('CDN support'));
+		so.depends('sudoku_http_mask', '1');
+		so.modalonly = true;
+
+		so = ss.taboption('field_general', form.Flag, 'sudoku_http_mask_tls', _('HTTP mask: %s').format(_('TLS')));
+		so.default = so.disabled;
+		so.depends({sudoku_http_mask_mode: /^(stream|poll|auto)$/});
+		so.modalonly = true;
+
+		so = ss.taboption('field_general', form.Value, 'sudoku_http_mask_host', _('HTTP mask: %s').format(_('Host/SNI override')));
+		so.datatype = 'or(hostname, hostport)';
+		so.placeholder = 'example.com[:443]';
+		so.depends({sudoku_http_mask_mode: /^(stream|poll|auto)$/});
+		so.modalonly = true;
+
+		so = ss.taboption('field_general', form.ListValue, 'sudoku_http_mask_strategy', _('HTTP mask strategy'));
+		so.value('random', _('Random'));
+		so.value('post', _('post'));
+		so.value('websocket', _('websocket'));
+		so.depends('sudoku_http_mask_mode', 'legacy');
 		so.modalonly = true;
 
 		/* Snell fields */
