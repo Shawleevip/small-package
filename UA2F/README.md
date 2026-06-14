@@ -164,9 +164,7 @@ REDIRECT/TPROXY 需要自行配置对应的 netfilter 规则。TPROXY 还需要 
 
 测试对象为 UA2F 和 [UA3F](https://github.com/SunBK201/UA3F)。测试环境：WSL2 x86_64 / `Linux 6.18.33.1-microsoft-standard-WSL2` / `16` 核 / `go1.26.3 linux/amd64`；客户端在独立 network namespace 中以并发 `128`、HTTP keep-alive 通过 PREROUTING 透明代理访问 `10.250.0.1:18080` origin server。UA2F 使用 `RelWithDebInfo` 构建，UA3F 使用 `GLOBAL` rewrite mode 和 `FFF` User-Agent；两者均完成 User-Agent 改写。
 
-**结论**：在相同的改写效果下，UA2F 的吞吐为 UA3F 的 `1.0`–`1.4` 倍、延迟更低，**CPU 占用约为其一半，常驻内存约为其 1/18**。
-
-> 表中 Req/s、Mbps 越高越好；延迟、CPU、内存越低越好。`UA2F / UA3F` 行为两者的比值（吞吐 >1 更好，资源占用 <1 更好），加粗为优势最显著之处。
+> 表中 Req/s、Mbps 越高越好；延迟、CPU、内存越低越好。`UA2F / UA3F` 行为两者的比值。
 
 ### 1 KiB 响应（50000 请求）
 
@@ -175,10 +173,10 @@ REDIRECT/TPROXY 需要自行配置对应的 netfilter 规则。TPROXY 还需要 
 | DIRECT | 原始流量 | 92155 | 966 | 1.30 ms | 3.80 ms | — | — | — |
 | REDIRECT | UA2F | 73515 | 771 | 1.69 ms | 4.11 ms | 224% | 2.5 MB | 3.0 MB |
 | REDIRECT | UA3F | 60474 | 634 | 2.02 ms | 4.68 ms | 489% | 45.6 MB | 48.0 MB |
-| REDIRECT | **UA2F / UA3F** | **1.22×** | 1.22× | 0.84× | 0.88× | **0.46×** | **0.054×** | 0.063× |
+| REDIRECT | UA2F / UA3F | 1.22× | 1.22× | 0.84× | 0.88× | 0.46× | 0.054× | 0.063× |
 | TPROXY | UA2F | 69188 | 725 | 1.79 ms | 4.39 ms | 224% | 2.5 MB | 3.1 MB |
 | TPROXY | UA3F | 60260 | 632 | 2.06 ms | 4.76 ms | 471% | 46.3 MB | 46.9 MB |
-| TPROXY | **UA2F / UA3F** | **1.15×** | 1.15× | 0.87× | 0.92× | **0.48×** | **0.055×** | 0.067× |
+| TPROXY | UA2F / UA3F | 1.15× | 1.15× | 0.87× | 0.92× | 0.48× | 0.055× | 0.067× |
 
 ### 64 KiB 响应（100000 请求）
 
@@ -187,10 +185,10 @@ REDIRECT/TPROXY 需要自行配置对应的 netfilter 规则。TPROXY 还需要 
 | DIRECT | 原始流量 | 74548 | 39256 | 1.67 ms | 4.89 ms | — | — | — |
 | REDIRECT | UA2F | 55697 | 29330 | 2.24 ms | 5.56 ms | 245% | 2.5 MB | 3.0 MB |
 | REDIRECT | UA3F | 54491 | 28694 | 2.29 ms | 5.55 ms | 440% | 46.3 MB | 50.1 MB |
-| REDIRECT | **UA2F / UA3F** | 1.02× | 1.02× | 0.98× | 1.00× | **0.56×** | **0.054×** | 0.060× |
+| REDIRECT | UA2F / UA3F | 1.02× | 1.02× | 0.98× | 1.00× | 0.56× | 0.054× | 0.060× |
 | TPROXY | UA2F | 61178 | 32216 | 2.04 ms | 5.10 ms | 242% | 2.5 MB | 3.0 MB |
 | TPROXY | UA3F | 43040 | 22665 | 2.90 ms | 6.86 ms | 401% | 44.5 MB | 47.3 MB |
-| TPROXY | **UA2F / UA3F** | **1.42×** | 1.42× | 0.70× | 0.74× | **0.60×** | **0.057×** | 0.063× |
+| TPROXY | UA2F / UA3F | 1.42× | 1.42× | 0.70× | 0.74× | 0.60× | 0.057× | 0.063× |
 
 ### 复现实验
 
